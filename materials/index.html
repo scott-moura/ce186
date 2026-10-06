@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse the sensors, controllers, and prototyping materials for CE186: Design of IoT for Smart Cities at UC Berkeley.">
+  <meta name="theme-color" content="#003262">
+  <title>Materials Library · CE186</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="data/catalog.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#catalog">Skip to materials</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="CE186 Materials Library home">
+        <span class="brand-mark" aria-hidden="true">CE<span>186</span></span>
+        <span class="brand-text">UC BERKELEY<span>Design of IoT for Smart Cities</span></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a class="nav-current" href="#catalog">Materials</a>
+        <a href="#request-instructions">How to request <svg class="icon" aria-hidden="true"><use href="#arrow-up-right"></use></svg></a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-line"></span>CE186 / FALL 2026</p>
+        <h1 id="page-title">Your next idea.<br><span>The parts to build it.</span></h1>
+        <p class="hero-description">Explore the materials for your smart city prototype.<br class="desktop-break"> From the first sensor reading to a working demo.</p>
+        <a class="hero-link" href="#catalog">Browse the library <svg class="icon" aria-hidden="true"><use href="#arrow-right"></use></svg></a>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+        <div class="hero-dot dot-one"></div><div class="hero-dot dot-two"></div>
+        <div class="hero-product main-product"><span class="part-caption">01 / CONNECT</span><img id="hero-board" alt="" fetchpriority="high"></div>
+        <div class="hero-product small-product"><img id="hero-sensor" alt=""><span class="part-caption">02 / SENSE</span></div>
+        <span class="art-label">A CITY STARTS WITH A CIRCUIT.</span>
+      </div>
+    </section>
+    <section class="request-strip" id="request-instructions" aria-label="Request instructions">
+      <span class="request-symbol" aria-hidden="true"><svg class="icon"><use href="#clipboard"></use></svg></span>
+      <div><strong>Found something for your project?</strong><p>To request materials, fill out the Google Sheet provided in Sprint4.</p></div>
+      <span class="request-tag">FOR COURSE PROJECTS</span>
+    </section>
+    <section class="catalog-section" id="catalog" aria-labelledby="catalog-heading">
+      <div class="section-topline"><div><p class="eyebrow muted">THE COMPONENT COLLECTION</p><h2 id="catalog-heading">Materials library<span id="total-count" class="count-pill"></span></h2></div><a class="download-link" href="data/materials-catalog.csv" download><svg class="icon" aria-hidden="true"><use href="#download"></use></svg> Download item list</a></div>
+      <div class="catalog-layout">
+        <aside class="category-panel" aria-labelledby="category-heading">
+          <h3 id="category-heading">Browse by category</h3>
+          <div id="category-filters" class="category-filters" role="group" aria-label="Filter by category"></div>
+          <div class="quantity-note"><svg class="icon" aria-hidden="true"><use href="#info"></use></svg><strong>A note on quantities</strong><p>Initial quantities show the total purchased at the start of the course. They do not reflect current availability.</p></div>
+        </aside>
+        <div class="catalog-main">
+          <div class="toolbar">
+            <div class="search-box"><svg class="icon" aria-hidden="true"><use href="#search"></use></svg><label class="sr-only" for="search">Search materials</label><input id="search" type="search" placeholder="Search materials, models, or ideas…" autocomplete="off"><button id="clear-search" class="clear-search" type="button" aria-label="Clear search" hidden><svg class="icon" aria-hidden="true"><use href="#close"></use></svg></button></div>
+            <div class="sort-box"><label for="sort">Sort by</label><select id="sort"><option value="recommended">Collection order</option><option value="name">Name: A–Z</option><option value="quantity">Initial quantity</option></select></div>
+          </div>
+          <div class="results-line"><p id="results-count" role="status" aria-live="polite" aria-atomic="true">Loading materials…</p><button id="reset-filters" type="button" hidden>Reset filters <span aria-hidden="true">×</span></button></div>
+          <div id="product-grid" class="product-grid"></div>
+          <div id="empty-state" class="empty-state" hidden><svg class="icon" aria-hidden="true"><use href="#search"></use></svg><h3>No materials found</h3><p>Try a different name, model, or category.</p><button id="empty-reset" type="button">Show all materials</button></div>
+          <noscript><p class="noscript-note">Enable JavaScript to search the catalog, or <a href="data/materials-catalog.csv">download the complete item list</a>.</p></noscript>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer"><div><strong>CE186 <span>/</span> Design of IoT for Smart Cities</strong><p>University of California, Berkeley · Fall 2026</p></div><p>Product photos courtesy of the linked suppliers.<br>Photo sources and documentation are listed with each item.</p><a href="#page-title">Back to top <svg class="icon" aria-hidden="true"><use href="#arrow-up"></use></svg></a></footer>
+  <dialog id="item-dialog" aria-labelledby="detail-title"><button type="button" class="dialog-close" aria-label="Close item details" autofocus><svg class="icon" aria-hidden="true"><use href="#close"></use></svg></button><div id="detail-content"></div></dialog>
+  <svg class="svg-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></symbol>
+    <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"></path></symbol>
+    <symbol id="arrow-up-right" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"></path></symbol>
+    <symbol id="arrow-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"></path></symbol>
+    <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"></path></symbol>
+    <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6m0-10v1"></path></symbol>
+    <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4"></path></symbol>
+    <symbol id="clipboard" viewBox="0 0 24 24"><path d="M8 5H5v16h14V5h-3M9 3h6v4H9zM8 12h8m-8 4h5"></path></symbol>
+    <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></symbol>
+    <symbol id="chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"></rect><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"></path></symbol>
+    <symbol id="sensor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M7 7a7 7 0 0 0 0 10m10-10a7 7 0 0 1 0 10M4 4a11 11 0 0 0 0 16M20 4a11 11 0 0 1 0 16"></path></symbol>
+    <symbol id="motor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4m-14-4 8 8m-8 0 8-8"></path></symbol>
+    <symbol id="display" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8m-4-4v4M7 9h4m-4 4h10"></path></symbol>
+    <symbol id="power" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7z"></path></symbol>
+    <symbol id="tools" viewBox="0 0 24 24"><path d="M7 4h10v16H7zM10 8h4m-4 4h4m-4 4h4M3 7h4m-4 5h4m-4 5h4m10-10h4m-4 5h4m-4 5h4"></path></symbol>
+  </svg>
+</body>
+</html>
