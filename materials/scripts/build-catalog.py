@@ -20,6 +20,16 @@ HEADERS = {
     'Image URL': 'image_url', 'Image source URL': 'image_source_url',
     'Purchase source': 'purchase_source', 'Keywords': 'keywords',
 }
+OPTIONAL_HEADERS = {
+    'Quantity label': 'quantity_label', 'Collection': 'collection',
+    'Storage location': 'storage_location', 'Image credit': 'image_credit',
+    'Inventory source URL': 'inventory_source_url', 'Inventory row': 'inventory_row',
+    'Original inventory quantity': 'original_inventory_quantity',
+}
+HEADERS.update(OPTIONAL_HEADERS)
+
+def local_image(value):
+    return bool(re.fullmatch(r'images/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?:webp|png|jpe?g|avif)', value))
 
 def read_rows(path):
     with ZipFile(path) as z:
@@ -58,15 +68,15 @@ def load_catalog(path):
     if header_index is None:
         raise ValueError('Cannot find the Catalog header row.')
     columns = {heading: col for col, heading in rows[header_index][1].items() if heading in HEADERS}
-    missing = set(HEADERS) - set(columns)
+    missing = set(HEADERS) - set(OPTIONAL_HEADERS) - set(columns)
     if missing:
         raise ValueError(f'Missing columns: {", ".join(sorted(missing))}')
     items, seen = [], set()
     for number, row in rows[header_index + 1:]:
-        item = {field: row.get(columns[heading], '') for heading, field in HEADERS.items()}
+        item = {field: row.get(columns.get(heading, ''), '') for heading, field in HEADERS.items()}
         if not any(item.values()):
             continue
-        for field in ('id', 'name', 'category', 'quantity', 'unit', 'description'):
+        for field in ('id', 'name', 'category', 'unit', 'description'):
             if not item[field]:
                 raise ValueError(f'Row {number}: {field} is required.')
         if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', item['id']):
@@ -74,14 +84,25 @@ def load_catalog(path):
         if item['id'] in seen:
             raise ValueError(f'Row {number}: duplicate ID {item["id"]}.')
         seen.add(item['id'])
-        quantity = float(item['quantity'])
-        if not quantity.is_integer() or not 0 <= quantity <= 100000:
-            raise ValueError(f'Row {number}: initial quantity must be a whole number from 0 to 100000.')
-        item['quantity'] = int(quantity)
-        for field in ('product_url', 'guide_url', 'image_url', 'image_source_url'):
+        if item['quantity'] == '':
+            if not item['quantity_label']:
+                raise ValueError(f'Row {number}: provide an initial quantity or a quantity label.')
+            item['quantity'] = None
+        else:
+            quantity = float(item['quantity'])
+            if not quantity.is_integer() or not 0 <= quantity <= 100000:
+                raise ValueError(f'Row {number}: initial quantity must be a whole number from 0 to 100000.')
+            if item['quantity_label']:
+                raise ValueError(f'Row {number}: use either an exact count or a quantity label, not both.')
+            item['quantity'] = int(quantity)
+        for field in ('product_url', 'guide_url', 'image_url', 'image_source_url', 'inventory_source_url'):
             url = item[field]
+            if field == 'image_url' and local_image(url):
+                if not (ROOT / url).is_file():
+                    raise ValueError(f'Row {number}: image file does not exist: {url}')
+                continue
             if url and (urlparse(url).scheme != 'https' or not urlparse(url).netloc):
-                raise ValueError(f'Row {number}: {field} must be an HTTPS URL or blank.')
+                raise ValueError(f'Row {number}: {field} must be an HTTPS URL or blank (images may also use images/ paths).')
         items.append(item)
     if not items:
         raise ValueError('The catalog contains no items.')

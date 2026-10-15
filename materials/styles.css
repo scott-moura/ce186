@@ -113,6 +113,8 @@ h2{font-family:var(--display);font-size:25px;letter-spacing:-.8px;line-height:1.
 .initial-label{display:block;font-size:8px;letter-spacing:.8px;color:#7d8a98;font-weight:600;margin-bottom:3px}
 .quantity-value{font-size:17px;font-family:var(--display);font-weight:800;letter-spacing:-.3px}
 .quantity-unit{font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;margin-left:4px}
+.quantity-estimate{font-size:13px;letter-spacing:0;line-height:1.5}
+.product-photo.lab-photo,.detail-image-area img.lab-photo{mix-blend-mode:normal;border-radius:5px}
 .pack-contents{font-size:9px;color:var(--muted);display:block;margin-top:2px}
 .details-button{border:1px solid #dce4ec;border-radius:6px;padding:7px 9px;background:#fff;color:var(--navy);font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px;flex-shrink:0}
 .details-button .icon{width:13px;height:13px}

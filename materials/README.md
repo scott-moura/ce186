@@ -1,12 +1,12 @@
 # CE186 Materials Library
 
-A static, browsing-only catalog for Fall 2026. The page lists **initial purchased quantities**, not live availability. Requests are handled in the Google Sheet provided in Sprint4. There are no prices, reservations, accounts, or return workflows.
+A static, browsing-only catalog for Fall 2026. The page lists **recorded starting quantities** from course purchases and the lab inventory, not live availability. Requests are handled in the Google Sheet provided in Sprint4. There are no prices, reservations, accounts, or return workflows.
 
 ## Edit or add materials
 
 1. Open `data/materials-catalog.xlsx` in Excel or another spreadsheet editor. The **Catalog** worksheet is the authoritative data source.
 2. Edit the table or append a row directly below it. Give every item a unique, stable ID such as `soil-moisture-sensor`. Do not rename headers. All fields are plain values; no formulas are needed.
-3. Fill in the name, category, initial quantity, unit, and description. Add the model, interface, power requirements, wiring notes, links, and photo source when known. Keep unknown details blank rather than guessing. Use HTTPS URLs for external links and photos.
+3. Fill in the name, category, unit, and description. Enter either an exact whole-number **Initial quantity**, or leave that blank and enter a **Quantity label** such as `Many (uncounted)`, `Few (uncounted)`, or `About 10`. Never replace an unknown count with zero. Add the model, interface, power requirements, wiring notes, links, and photo source when known. Keep unknown details blank rather than guessing. Use HTTPS URLs for external links and photos. A local image may instead use a path such as `images/lab/my-component.webp`.
 4. Save and close the workbook, then run from this folder:
 
    ```sh
@@ -16,19 +16,27 @@ A static, browsing-only catalog for Fall 2026. The page lists **initial purchase
    Python 3 is required; no additional packages are needed. The script validates IDs, quantities, and URLs before generating `data/catalog.js` and the downloadable `data/materials-catalog.csv`.
 5. Preview and commit the workbook and both generated files along with any page edits.
 
-Categories are generated from the spreadsheet. The starting categories are Controllers, Sensors, Actuators, Displays & inputs, Power & cables, and Prototyping. New categories appear automatically. Items appear in spreadsheet order unless the student changes the sort.
+Categories are generated from the spreadsheet. The catalog includes Controllers, Sensors, Actuators, Displays & inputs, Power & cables, Prototyping, Structural & hardware, Enclosures & storage, and Tools. New categories appear automatically. Items appear in spreadsheet order unless the student changes the sort. Quantity sorting puts approximate/uncounted items after exact counts.
 
-`Initial quantity` counts the purchased unit: resistor kits and harness packs are counted as kits/packs. `Pack contents` describes the contents of each purchased unit. Avoid summing these unlike units into a misleading inventory total.
+`Initial quantity` counts the inventoried unit: resistor kits and harness packs are counted as kits/packs, while loose switches and connector pieces are counted individually. `Pack contents` describes the contents of each kit/pack. Avoid summing these unlike units into a misleading inventory total.
 
-The `Purchase source` field records the original purchase-order filename, row, and DigiKey part number. For later cache additions, replace it with the relevant inventory reference. Do not copy pricing or student information into this public catalog.
+The legacy `Purchase source` field records the purchase-order or lab-inventory reference. The added fields `Collection`, `Storage location`, `Image credit`, `Inventory source URL`, `Inventory row`, and `Original inventory quantity` preserve provenance and the source count. `Quantity label` controls the display of non-exact quantities. These fields are optional for backward compatibility. Storage locations are only populated where explicitly recorded; blank locations are not inherited from neighboring rows. Do not copy pricing or student information into this public catalog.
+
+## October 15, 2026 lab-inventory merge
+
+All 141 material entries in [eCAL Materials Inventory - CE 186 F26](https://docs.google.com/spreadsheets/d/1EAuskHs8YWEsrWqPZJ0_IKjBCN9P_-znKS7qX1TvKnY/edit) were reconciled: 138 new listings and three matched additions, giving 167 catalog listings. Section headings and blank rows are not materials.
+
+The matched totals are 14 ultrasonic sensors (12 + 2), 24 resistor kits (4 + 20), and 18 FS5103B servos (4 + 14). The instructor confirmed that the 20 resistor kits are complete kits and that the 28 switched battery holders should be listed as 9 V despite the photo filename. Different or unverified variants, such as battery-holder styles and Motor Shield revisions, remain separate. Twenty source quantities are approximate or uncounted and retain a text label rather than an invented exact count.
+
+Inventory photographs and primary documentation were used to correct clear mismatches, including the AD8495 analog thermocouple board, ENS160 product reference, NTE6085 rectifier, and photographed 9 V DC adapter. Unpopulated custom PCBs are labeled as bare boards. Unidentified compounds, devices, connectors, or LED types retain explicit verification notes. Conflicting example-product links are omitted rather than presented as exact specifications. The source Google Sheet is unchanged.
 
 ## Photos and technical references
 
-Photo URLs point to the exact purchased product's supplier image, using DigiKey images where retrieved and manufacturer images otherwise. Photos remain hosted by the supplier; no third-party images are relicensed by this repository's license. Each item's details link to the image source and to technical documentation. Suppliers sometimes use representative package photos. If a photo stops loading, the page shows a labeled fallback and keeps the product reference accessible.
+Purchased-item photo URLs use DigiKey images where retrieved and manufacturer images otherwise. Lab images supplied through the inventory are stored as optimized WebP assets in `images/lab/`, so students do not need a Drive sign-in to view them. Their source and image type (lab photo versus reference image) are recorded in the workbook. Only images actually referenced by catalog entries are published. Unrelated/misplaced images are not used; missing photos show a labeled fallback. Third-party reference images are not relicensed by this repository's license. Product and documentation links are included where appropriate to the identified item.
 
 Product 1438 is described as Motor Shield v2 in the purchase order; the current manufacturer page calls it v3. The catalog preserves the order's identity and asks students to check the delivered revision and library support.
 
-The quantity values were imported from `Microkit-Components-2026-09-23.xlsx`, not from earlier recommendations or supplier stock counts. The original purchase workbook, with its prices, is not included in this public site.
+Purchased quantities were imported from `Microkit-Components-2026-09-23.xlsx`, not from earlier recommendations or supplier stock counts. Lab additions preserve the inventory's counts and the instructor's clarifications. The original purchase workbook, with its prices, is not included in this public site.
 
 ## Preview
 
@@ -50,6 +58,7 @@ This folder is ready to publish. Creation of the local page does not push change
 
 ```sh
 python3 scripts/build-catalog.py --check
+python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
-This checks the generated data against the current workbook without rewriting anything. Verify search, category filtering, sorting, and keyboard opening/closing of item details when changing the page.
+The check compares generated data against the current workbook without rewriting anything. The tests cover exact versus uncounted quantities, IDs, URLs, local assets, and inventory reconciliation. Verify search, category filtering, sorting, and keyboard opening/closing of item details when changing the page.
