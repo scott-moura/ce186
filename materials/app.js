@@ -8,6 +8,12 @@
     return;
   }
   const items = data.items;
+  const availability = CE186Availability;
+  const inventoryClient = window.CE186InventoryClient;
+  const inventoryConfig = window.CE186_INVENTORY_CONFIG || {};
+  const demoMode = inventoryClient.demoAllowed(location);
+  let inventory = {status:'loading', requested:{}, uncertain:new Set()};
+  let inventoryRequest = 0;
   const search = document.querySelector('#search');
   const sort = document.querySelector('#sort');
   const filters = document.querySelector('#category-filters');
@@ -37,6 +43,64 @@
   let currentItem = null;
   const unitFor = item => item.quantity === 1 ? item.unit.replace(/s$/, '') : item.unit;
   const quantity = item => item.quantity_label || `${item.quantity} ${unitFor(item)}`;
+  const unitAt = (item, value) => value === 1 ? item.unit.replace(/s$/, '') : item.unit;
+  function remainingMarkup(item) {
+    const balance = availability.remaining(item, inventory);
+    const classes = `quantity-value remaining-value${balance.value === null ? ' quantity-estimate' : ''}${balance.negative ? ' quantity-negative' : ''}`;
+    return `<span class="${classes}">${escape(balance.text)}${balance.value !== null ? `<span class="quantity-unit">${escape(unitAt(item,balance.value))}</span>` : ''}</span>${balance.negative ? '<span class="shortage-label">Over-requested</span>' : ''}`;
+  }
+  function refreshInventoryDisplay() {
+    for (const node of document.querySelectorAll('[data-remaining]')) {
+      const item = byId.get(node.dataset.remaining);
+      if (item) node.innerHTML = remainingMarkup(item);
+    }
+    const panel = document.querySelector('#inventory-status');
+    const title = document.querySelector('#inventory-status-title');
+    const message = document.querySelector('#inventory-status-message');
+    const refresh = document.querySelector('#inventory-refresh');
+    panel.dataset.state = inventory.status;
+    refresh.hidden = !demoMode && !inventoryConfig.endpoint;
+    refresh.disabled = inventory.status === 'loading';
+    if (inventory.status === 'loading') {
+      title.textContent = 'Checking request counts…';
+      message.textContent = 'Initial quantities are ready. Remaining quantities will appear after the request sheet is read.';
+    } else if (inventory.status === 'demo') {
+      title.textContent = 'LOCAL PREVIEW · SAMPLE REQUESTS';
+      message.textContent = 'These are invented demo balances, not current requests. Arduino intentionally shows −2 to demonstrate over-requested stock. The live Google Sheet is not connected.';
+    } else if (inventory.status === 'ready') {
+      title.textContent = `Requests read ${inventory.readAt.toLocaleString(undefined, {dateStyle:'medium',timeStyle:'short'})}`;
+      message.textContent = inventory.reviewCount
+        ? `${inventory.reviewCount} request entries could not be matched or validated and are not fully included. Remaining quantities may be too high. The instructor should review the request sheet. Reload or refresh for a new reading.`
+        : 'Remaining quantities subtract linked Moura Lab requests, not physical stock on hand. Reload or refresh for a new reading.';
+      panel.dataset.state = inventory.reviewCount ? 'warning' : 'ready';
+    } else if (inventory.status === 'unconfigured') {
+      title.textContent = 'Live request counts are not connected yet';
+      message.textContent = 'Initial quantities are shown below. Remaining quantities are unavailable until the instructor connects the Apps Script service.';
+    } else {
+      title.textContent = 'Request counts could not be loaded';
+      message.textContent = 'Remaining quantities are unavailable, not zero. Initial quantities remain visible. Try refreshing the counts.';
+    }
+  }
+  async function loadInventory() {
+    const request = ++inventoryRequest;
+    inventory = {status:'loading', requested:{}, uncertain:new Set()};
+    refreshInventoryDisplay();
+    try {
+      if (!demoMode && !inventoryConfig.endpoint) {
+        inventory.status = 'unconfigured';
+      } else {
+        const values = demoMode
+          ? availability.validatePayload(inventoryClient.demoPayload(), [...byId.keys()])
+          : await inventoryClient.load(inventoryConfig.endpoint, [...byId.keys()]);
+        if (request !== inventoryRequest) return;
+        inventory = {...values, status:demoMode ? 'demo' : 'ready'};
+      }
+    } catch {
+      if (request !== inventoryRequest) return;
+      inventory = {status:'error', requested:{}, uncertain:new Set()};
+    }
+    refreshInventoryDisplay();
+  }
   const image = (item, className = 'product-photo') => safeImageUrl(item.image_url) ? `<img class="${className}${item.image_credit === 'Lab inventory photo' ? ' lab-photo' : ''}" src="${safeImageUrl(item.image_url)}" alt="${escape(item.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<span class="photo-fallback">${icon(iconNames[item.category] || 'grid')}<span>Photo unavailable</span></span>`;
 
   function installImageFallbacks(scope) {
@@ -75,7 +139,7 @@
     grid.innerHTML = visible.map(item => `<article class="product-card">
       <button class="photo-button" type="button" data-item="${escape(item.id)}" aria-label="View ${escape(item.name)} details"><span class="photo-category">${escape(item.category)}</span>${image(item)}</button>
       <div class="product-info"><p class="product-model">${escape(item.model || item.collection)}</p><h3><button type="button" data-item="${escape(item.id)}">${escape(item.name)}</button></h3><p class="product-description">${escape(item.description)}</p>${item.interface ? `<span class="product-interface">${escape(item.interface.split(' / ')[0])}</span>` : ''}</div>
-      <div class="card-bottom"><div><span class="initial-label">INITIAL QUANTITY</span><span class="quantity-value${item.quantity_label ? ' quantity-estimate' : ''}">${item.quantity_label ? escape(item.quantity_label) : `${item.quantity}<span class="quantity-unit">${escape(unitFor(item))}</span>`}</span>${item.pack_contents ? `<span class="pack-contents">${escape(item.pack_contents)}</span>` : ''}</div><button class="details-button" type="button" data-item="${escape(item.id)}" aria-label="View ${escape(item.name)} details">Details ${icon('arrow-right')}</button></div>
+      <div class="card-bottom"><div class="quantity-pair"><div><span class="initial-label">INITIAL QUANTITY</span><span class="quantity-value${item.quantity_label ? ' quantity-estimate' : ''}">${item.quantity_label ? escape(item.quantity_label) : `${item.quantity}<span class="quantity-unit">${escape(unitFor(item))}</span>`}</span></div><div><span class="initial-label">REMAINING UNREQUESTED</span><div data-remaining="${escape(item.id)}">${remainingMarkup(item)}</div></div></div>${item.pack_contents ? `<span class="pack-contents">${escape(item.pack_contents)}</span>` : ''}<button class="details-button" type="button" data-item="${escape(item.id)}" aria-label="View ${escape(item.name)} details">Details ${icon('arrow-right')}</button></div>
     </article>`).join('');
     installImageFallbacks(grid);
     for (const button of filters.querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.category === category));
@@ -92,6 +156,14 @@
     const specs = [['Interface',item.interface],['Power',item.power],['Collection',item.collection],['Storage location',item.storage_location]].filter(([,value]) => value).map(([label,value]) => `<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join('');
     detail.innerHTML = `<div class="detail-layout"><div class="detail-image-area">${image(item)}${sourceUrl ? `<a class="photo-credit" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${escape(item.image_credit || `Photo: ${supplier}`)}</a>` : ''}</div><div class="detail-body"><p class="eyebrow">${escape(item.category)}</p><h2 id="detail-title">${escape(item.name)}</h2><p class="detail-model">${escape(item.model)}</p><p class="detail-description">${escape(item.description)}</p><dl class="detail-specs"><div><dt>Initial quantity</dt><dd>${escape(quantity(item))}${item.pack_contents ? `<br>${escape(item.pack_contents)}` : ''}</dd></div>${specs}</dl>${item.notes ? `<div class="detail-notes"><h3>Getting started</h3><p>${escape(item.notes)}</p></div>` : ''}<div class="detail-links">${guideUrl ? `<a class="primary" href="${guideUrl}" target="_blank" rel="noopener noreferrer">Guide / documentation ${icon('arrow-up-right')}</a>` : ''}${productUrl ? `<a href="${productUrl}" target="_blank" rel="noopener noreferrer">Product reference ${icon('arrow-up-right')}</a>` : ''}</div><p class="detail-request">To request materials, fill out the Google Sheet provided in Sprint4.</p></div></div>`;
     installImageFallbacks(detail);
+    const remainingRow = document.createElement('div');
+    const remainingLabel = document.createElement('dt');
+    remainingLabel.textContent = 'Remaining unrequested';
+    const remainingValue = document.createElement('dd');
+    remainingValue.dataset.remaining = item.id;
+    remainingValue.innerHTML = remainingMarkup(item);
+    remainingRow.append(remainingLabel, remainingValue);
+    detail.querySelector('.detail-specs > div').after(remainingRow);
     if (!dialog.open) dialog.showModal();
     document.body.classList.add('dialog-open');
     const url = new URL(location.href);
@@ -153,4 +225,7 @@
   renderCategories();
   render();
   readHash();
+  document.querySelector('#inventory-refresh').addEventListener('click', loadInventory);
+  window.addEventListener('pageshow', event => { if (event.persisted) loadInventory(); });
+  loadInventory();
 })();

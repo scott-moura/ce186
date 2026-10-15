@@ -9,6 +9,9 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
   <script src="data/catalog.js" defer></script>
+  <script src="availability-core.js" defer></script>
+  <script src="inventory-config.js" defer></script>
+  <script src="inventory-client.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -52,13 +55,14 @@
         <aside class="category-panel" aria-labelledby="category-heading">
           <h3 id="category-heading">Browse by category</h3>
           <div id="category-filters" class="category-filters" role="group" aria-label="Filter by category"></div>
-          <div class="quantity-note"><svg class="icon" aria-hidden="true"><use href="#info"></use></svg><strong>A note on quantities</strong><p>Starting quantities come from course purchases and the lab inventory. “Many,” “Few,” and “About” are uncounted or approximate. These are not live availability counts.</p></div>
+          <div class="quantity-note"><svg class="icon" aria-hidden="true"><use href="#info"></use></svg><strong>A note on quantities</strong><p>Initial quantities are the recorded starting stock. Remaining unrequested = initial − linked “Moura Lab” requests, including requests not yet approved or collected. Negative balances mean over-requested stock, not physical stock on hand. Approximate initial counts show “Not counted.”</p></div>
         </aside>
         <div class="catalog-main">
           <div class="toolbar">
             <div class="search-box"><svg class="icon" aria-hidden="true"><use href="#search"></use></svg><label class="sr-only" for="search">Search materials</label><input id="search" type="search" placeholder="Search materials, models, or ideas…" autocomplete="off"><button id="clear-search" class="clear-search" type="button" aria-label="Clear search" hidden><svg class="icon" aria-hidden="true"><use href="#close"></use></svg></button></div>
             <div class="sort-box"><label for="sort">Sort by</label><select id="sort"><option value="recommended">Collection order</option><option value="name">Name: A–Z</option><option value="quantity">Initial quantity</option></select></div>
           </div>
+          <div id="inventory-status" class="inventory-status" role="status" aria-live="polite" aria-atomic="true"><div><strong id="inventory-status-title">Request counts</strong><p id="inventory-status-message">Checking the request-count connection…</p></div><button id="inventory-refresh" type="button" hidden>Refresh counts</button></div>
           <div class="results-line"><p id="results-count" role="status" aria-live="polite" aria-atomic="true">Loading materials…</p><button id="reset-filters" type="button" hidden>Reset filters <span aria-hidden="true">×</span></button></div>
           <div id="product-grid" class="product-grid"></div>
           <div id="empty-state" class="empty-state" hidden><svg class="icon" aria-hidden="true"><use href="#search"></use></svg><h3>No materials found</h3><p>Try a different name, model, or category.</p><button id="empty-reset" type="button">Show all materials</button></div>

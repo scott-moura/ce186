@@ -1,6 +1,8 @@
 # CE186 Materials Library
 
-A static, browsing-only catalog for Fall 2026. The page lists **recorded starting quantities** from course purchases and the lab inventory, not live availability. Requests are handled in the Google Sheet provided in Sprint4. There are no prices, reservations, accounts, or return workflows.
+A browsing-only catalog for Fall 2026. Each card shows **Initial quantity** and **Remaining unrequested**. Initial quantities are recorded starting stock; remaining quantities subtract linked Moura Lab requests read through a separately authorized Apps Script service. This is not physical inventory or a reservation system. Requests are handled in the Google Sheet provided in Sprint4. There are no prices, reservations, accounts, or return workflows.
+
+The live service is configured in `inventory-config.js` and was verified against all nine team tabs. See [the connection and local-preview instructions](apps-script/README.md). Failed or unconfigured connections show `Unavailable`, not zero. Negative balances remain negative and red; uncounted initial stock shows `Not counted` for remaining quantities. Source spreadsheet files are not changed by the request-count feature. Missing or invalid item links are excluded with a visible review warning, so remaining counts may be too high until those requests are corrected.
 
 ## Edit or add materials
 
@@ -14,7 +16,8 @@ A static, browsing-only catalog for Fall 2026. The page lists **recorded startin
    ```
 
    Python 3 is required; no additional packages are needed. The script validates IDs, quantities, and URLs before generating `data/catalog.js` and the downloadable `data/materials-catalog.csv`.
-5. Preview and commit the workbook and both generated files along with any page edits.
+5. If you added, removed or changed item IDs, run `node scripts/update-inventory-ids.cjs` and update/redeploy the private Apps Script project's `CatalogIds` file too. See the connection instructions above. Node.js is needed only for this allowlist helper and the JavaScript tests, not for the spreadsheet-to-catalog build.
+6. Preview and commit the workbook and both generated files along with any page edits. During a local-only review, leave the changes uncommitted and do not push until publication is approved.
 
 Categories are generated from the spreadsheet. The catalog includes Controllers, Sensors, Actuators, Displays & inputs, Power & cables, Prototyping, Structural & hardware, Enclosures & storage, and Tools. New categories appear automatically. Items appear in spreadsheet order unless the student changes the sort. Quantity sorting puts approximate/uncounted items after exact counts.
 
@@ -59,6 +62,8 @@ This folder is ready to publish. Creation of the local page does not push change
 ```sh
 python3 scripts/build-catalog.py --check
 python3 -m unittest discover -s scripts -p 'test_*.py'
+node scripts/update-inventory-ids.cjs --check
+node --test scripts/test-availability.cjs
 ```
 
 The check compares generated data against the current workbook without rewriting anything. The tests cover exact versus uncounted quantities, IDs, URLs, local assets, and inventory reconciliation. Verify search, category filtering, sorting, and keyboard opening/closing of item details when changing the page.
